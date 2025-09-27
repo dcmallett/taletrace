@@ -1,1 +1,148 @@
-@import "tailwindcss";
+@tailwind utilities
+
+/* Import Google Fonts */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&display=swap");
+
+/* Tailwind v4 Theme Configuration */
+@theme {
+	/* Colors - Your Design System */
+	--color-primary: #004643;
+	--color-accent: #f9bc60;
+	--color-secondary: #abd1c6;
+	--color-neutral: #e8e4e6;
+	--color-dark: #0f0f0f;
+	--color-light: #ffffff;
+	--color-error: #d64545;
+
+	/* Spacing (8pt grid system) */
+	--spacing-1: 4px;
+	--spacing-2: 8px;
+	--spacing-3: 12px;
+	--spacing-4: 16px;
+	--spacing-6: 24px;
+	--spacing-8: 32px;
+	--spacing-12: 48px;
+	--spacing-16: 64px;
+
+	/* Component Heights */
+	--size-header-mobile: 64px;
+	--size-header-desktop: 70px;
+	--size-touch-target: 48px;
+
+	/* Border Radius */
+	--radius-sm: 8px;
+	--radius-md: 12px;
+	--radius-lg: 16px;
+
+	/* Shadows */
+	--shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+	--shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+		0 2px 4px -1px rgba(0, 0, 0, 0.06);
+	--shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+		0 4px 6px -2px rgba(0, 0, 0, 0.05);
+
+	/* Typography */
+	--font-family-sans: "Inter", system-ui, sans-serif;
+	--font-family-serif: "Playfair Display", Georgia, serif;
+	--font-family-display: "Playfair Display", Georgia, serif;
+}
+
+/* Base Styles */
+html {
+	scroll-behavior: smooth;
+}
+
+body {
+	font-family: var(--font-family-sans);
+	background-color: #f5f5f4; /* stone-100 */
+	color: var(--color-dark);
+	line-height: 1.5;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+
+/* Focus Styles for Accessibility */
+*:focus {
+	outline: 2px solid var(--color-primary);
+	outline-offset: 2px;
+}
+
+button:focus,
+input:focus,
+textarea:focus,
+select:focus {
+	outline: none;
+	box-shadow: 0 0 0 2px var(--color-primary);
+}
+
+/* Component Classes */
+.btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	border: none;
+	border-radius: var(--radius-sm);
+	font-family: var(--font-family-sans);
+	font-weight: 600;
+	text-decoration: none;
+	cursor: pointer;
+	transition: all 200ms ease-in-out;
+	min-height: var(--size-touch-target);
+	padding: 12px 24px;
+}
+
+.btn:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+.btn-primary {
+	background-color: var(--color-primary);
+	color: var(--color-light);
+}
+
+.btn-primary:hover:not(:disabled) {
+	background-color: rgba(0, 70, 67, 0.9);
+	transform: translateY(-1px);
+	box-shadow: var(--shadow-md);
+}
+
+.font-display {
+	font-family: var(--font-family-display);
+	font-weight: 700;
+}
+
+.font-serif {
+	font-family: var(--font-family-serif);
+}
+
+.font-sans {
+	font-family: var(--font-family-sans);
+}
+
+/* Utility Classes */
+.text-primary {
+	color: var(--color-primary);
+}
+.text-dark {
+	color: var(--color-dark);
+}
+.text-light {
+	color: var(--color-light);
+}
+.bg-primary {
+	background-color: var(--color-primary);
+}
+.bg-light {
+	background-color: var(--color-light);
+}
+.border-neutral {
+	border-color: var(--color-neutral);
+}
+.shadow-md {
+	box-shadow: var(--shadow-md);
+}
+.shadow-lg {
+	box-shadow: var(--shadow-lg);
+}
