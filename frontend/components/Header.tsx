@@ -22,13 +22,13 @@ const Header = () => {
 					{/* Desktop Navigation */}
 					<nav className="hidden md:flex items-center space-x-8">
 						<Link
-							href="/"
+							href="/explore"
 							className="text-gray-700 hover:text-primary px-3 py-2 text-sm font-medium transition-colors duration-200"
 						>
 							Explore
 						</Link>
 						<Link
-							href="/tours"
+							href="/location/tours"
 							className="text-gray-700 hover:text-primary px-3 py-2 text-sm font-medium transition-colors duration-200"
 						>
 							Tours
@@ -70,14 +70,14 @@ const Header = () => {
 				<div className="md:hidden">
 					<div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-light border-t border-neutral shadow-lg">
 						<Link
-							href="/"
+							href="/explore"
 							className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-primary hover:bg-gray-50 rounded-md transition-colors"
 							onClick={() => setMobileMenuOpen(false)}
 						>
 							Explore
 						</Link>
 						<Link
-							href="/tours"
+							href="/location/tours"
 							className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-primary hover:bg-gray-50 rounded-md transition-colors"
 							onClick={() => setMobileMenuOpen(false)}
 						>

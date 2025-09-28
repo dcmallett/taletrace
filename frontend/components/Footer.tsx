@@ -69,7 +69,7 @@ const Footer = () => {
 							<ul className="space-y-3">
 								<li>
 									<Link
-										href="/"
+										href="/explore"
 										className="text-gray-600 hover:text-primary transition-colors duration-200"
 									>
 										Discover Places
@@ -77,7 +77,7 @@ const Footer = () => {
 								</li>
 								<li>
 									<Link
-										href="/tours"
+										href="/location/tours"
 										className="text-gray-600 hover:text-primary transition-colors duration-200"
 									>
 										Create Tours
