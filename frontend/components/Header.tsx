@@ -9,100 +9,102 @@ const Header = () => {
 	const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
 
 	return (
-		<header className="sticky top-0 z-50 bg-light shadow-md border-b border-neutral">
-			<div className="container mx-auto flex items-center justify-between h-header-mobile md:h-header-desktop px-4 md:px-8 lg:px-16">
-				<Link href="/" className="flex items-center">
-					<h1 className="font-display text-xl md:text-2xl text-primary font-bold">
-						TaleTrace
-					</h1>
-				</Link>
+		<header className="sticky top-0 z-50 bg-white shadow-md border-b border-gray-200">
+			<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+				<div className="flex items-center justify-between h-16 md:h-20">
+					{/* Logo */}
+					<Link href="/" className="flex items-center">
+						<h1 className="font-display text-xl md:text-2xl text-primary font-bold">
+							TaleTrace
+						</h1>
+					</Link>
 
-				{/* Desktop nav */}
-				<nav className="hidden md:flex items-center gap-12">
-					<Link
-						href="/"
-						className="font-sans text-sm font-medium text-dark hover:text-primary transition-colors duration-200"
-					>
-						Explore
-					</Link>
-					<Link
-						href="/tours"
-						className="font-sans text-sm font-medium text-dark hover:text-primary transition-colors duration-200"
-					>
-						Tours
-					</Link>
-					<Link
-						href="/assistant"
-						className="font-sans text-sm font-medium text-dark hover:text-primary transition-colors duration-200"
-					>
-						Assistant
-					</Link>
-					<Link
-						href="/account"
-						className="font-sans text-sm font-medium text-dark hover:text-primary transition-colors duration-200"
-					>
-						Account
-					</Link>
-					<Link
-						href="/login"
-						className="btn btn-primary text-sm px-4 py-2 min-h-10"
-					>
-						Login
-					</Link>
-				</nav>
+					{/* Desktop Navigation */}
+					<nav className="hidden md:flex items-center space-x-8">
+						<Link
+							href="/"
+							className="text-gray-700 hover:text-primary px-3 py-2 text-sm font-medium transition-colors duration-200"
+						>
+							Explore
+						</Link>
+						<Link
+							href="/tours"
+							className="text-gray-700 hover:text-primary px-3 py-2 text-sm font-medium transition-colors duration-200"
+						>
+							Tours
+						</Link>
+						<Link
+							href="/assistant"
+							className="text-gray-700 hover:text-primary px-3 py-2 text-sm font-medium transition-colors duration-200"
+						>
+							Assistant
+						</Link>
+						<Link
+							href="/account"
+							className="text-gray-700 hover:text-primary px-3 py-2 text-sm font-medium transition-colors duration-200"
+						>
+							Account
+						</Link>
+						<Link href="/login" className="btn btn-primary ml-4">
+							Login
+						</Link>
+					</nav>
 
-				<button
-					className="md:hidden p-2 text-dark hover:text-primary transition-colors duration-200 min-h-touch-target min-w-touch-target flex items-center justify-center border-0 bg-transparent cursor-pointer"
-					onClick={() => setMobileMenuOpen(!isMobileMenuOpen)}
-				>
-					{isMobileMenuOpen ? (
-						<IoCloseSharp size={24} />
-					) : (
-						<GiHamburgerMenu size={24} />
-					)}
-				</button>
+					{/* Mobile menu button */}
+					<button
+						className="md:hidden p-2 rounded-md text-gray-700 hover:text-primary hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-primary transition-colors"
+						onClick={() => setMobileMenuOpen(!isMobileMenuOpen)}
+					>
+						<span className="sr-only">Open main menu</span>
+						{isMobileMenuOpen ? (
+							<IoCloseSharp className="h-6 w-6" />
+						) : (
+							<GiHamburgerMenu className="h-6 w-6" />
+						)}
+					</button>
+				</div>
 			</div>
 
 			{/* Mobile Menu */}
 			{isMobileMenuOpen && (
-				<div className="md:hidden bg-light border-t border-neutral shadow-lg">
-					<nav className="container mx-auto px-4 md:px-8 lg:px-16 py-6 flex flex-col gap-4">
+				<div className="md:hidden">
+					<div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-white border-t border-gray-200 shadow-lg">
 						<Link
 							href="/"
-							className="font-sans text-base font-medium text-dark hover:text-primary transition-colors duration-200 py-2 block"
+							className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-primary hover:bg-gray-50 rounded-md transition-colors"
 							onClick={() => setMobileMenuOpen(false)}
 						>
 							Explore
 						</Link>
 						<Link
 							href="/tours"
-							className="font-sans text-base font-medium text-dark hover:text-primary transition-colors duration-200 py-2 block"
+							className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-primary hover:bg-gray-50 rounded-md transition-colors"
 							onClick={() => setMobileMenuOpen(false)}
 						>
 							Tours
 						</Link>
 						<Link
 							href="/assistant"
-							className="font-sans text-base font-medium text-dark hover:text-primary transition-colors duration-200 py-2 block"
+							className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-primary hover:bg-gray-50 rounded-md transition-colors"
 							onClick={() => setMobileMenuOpen(false)}
 						>
 							Assistant
 						</Link>
 						<Link
 							href="/account"
-							className="font-sans text-base font-medium text-dark hover:text-primary transition-colors duration-200 py-2 block"
+							className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-primary hover:bg-gray-50 rounded-md transition-colors"
 							onClick={() => setMobileMenuOpen(false)}
 						>
 							Account
 						</Link>
 						<Link
 							href="/login"
-							className="btn btn-primary text-base mt-2 text-center"
+							className="btn btn-primary w-full mt-4 sm:mx-3"
 							onClick={() => setMobileMenuOpen(false)}
 						>
 							Login
 						</Link>
-					</nav>
+					</div>
 				</div>
 			)}
 		</header>
