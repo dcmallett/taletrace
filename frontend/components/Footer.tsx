@@ -1,17 +1,16 @@
 import Link from "next/link";
-import { FaF, FaXTwitter } from "react-icons/fa6";
-import { FaInstagram } from "react-icons/fa6";
+import { FaXTwitter, FaInstagram } from "react-icons/fa6";
 import { FaTiktok } from "react-icons/fa";
 import { MdFacebook } from "react-icons/md";
 
 const Footer = () => {
 	return (
-		<footer className="bg-white border-t border-gray-200 mt-auto">
+		<footer className="bg-light border-t border-neutral mt-auto">
 			<div className="px-4 md:px-8 lg:px-16 py-8">
 				<div className="max-w-7xl mx-auto">
 					{/* Brand Section */}
 					<div className="text-center mb-8">
-						<h3 className="text-2xl font-serif font-bold text-primary mb-2">
+						<h3 className="text-2xl font-display font-bold text-primary mb-2">
 							TaleTrace
 						</h3>
 						<p className="font-sans text-gray-600 max-w-2xl mx-auto">
@@ -149,9 +148,10 @@ const Footer = () => {
 						</div>
 					</div>
 
-					<div className="border-t border-gray-200 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center">
-						<p className="text-gray-500 text-sm"></p>©{" "}
-						{new Date().getFullYear()} TaleTrace. All rights reserved.
+					<div className="border-t border-neutral mt-8 pt-8 flex flex-col md:flex-row justify-between items-center">
+						<p className="font-sans text-gray-500 text-sm">
+							© {new Date().getFullYear()} TaleTrace. All rights reserved.
+						</p>
 					</div>
 				</div>
 			</div>

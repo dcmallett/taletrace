@@ -20,20 +20,19 @@ const Button: React.FC<ButtonProps> = ({
 	type = "button",
 }) => {
 	const baseClasses =
-		"font-sans font-bold transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed";
+		"btn font-sans disabled:opacity-50 disabled:cursor-not-allowed";
 
 	const variantClasses = {
-		primary:
-			"bg-primary text-white hover:bg-primary/90 focus:ring-primary border-primary",
+		primary: "btn-primary",
 		secondary:
-			"bg-secondary text-dark hover:bg-secondary/90 focus:ring-secondary border-secondary",
-		icon: "bg-transparent text-dark hover:bg-gray-100 focus:ring-gray-200 border-transparent",
+			"bg-secondary text-dark hover:bg-secondary/90 focus:ring-2 focus:ring-secondary",
+		icon: "bg-transparent text-dark hover:bg-gray-100 focus:ring-2 focus:ring-gray-200 border-transparent min-h-[48px]",
 	};
 
 	const sizeClasses = {
-		small: "h-8 px-3 py-1 text-sm rounded-lg",
-		default: "h-12 px-6 py-3 text-base rounded-lg",
-		icon: "h-8 w-8 p-2 rounded-lg flex items-center justify-center",
+		small: "h-8 px-3 py-1 text-sm",
+		default: "h-12 px-6 py-3 text-base",
+		icon: "h-8 w-8 p-2 flex items-center justify-center",
 	};
 
 	// Special sizing for buttons to meet 48px min touch target on mobile

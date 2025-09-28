@@ -8,11 +8,15 @@ interface CardProps {
 
 const Card: React.FC<CardProps> = ({ children, className = "", onClick }) => {
 	const baseClasses =
-		"rounded-xl shadow-md bg-white transition-all duration 200 ease-in-out";
-	const interactiveClasses = onClick ? "hover:shadow-lg cursor-pointer" : "";
+		"bg-light shadow-md transition-all duration-200 ease-in-out border border-neutral";
+	const interactiveClasses = onClick
+		? "shadow-lg cursor-pointer hover:shadow-lg"
+		: "";
+	const radiusClasses = "rounded-[var(--radius-md)]";
+
 	return (
 		<div
-			className={`${baseClasses} ${interactiveClasses} ${className}`}
+			className={`${baseClasses} ${radiusClasses} ${interactiveClasses} ${className}`}
 			onClick={onClick}
 		>
 			{children}
