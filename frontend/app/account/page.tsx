@@ -1,31 +1,37 @@
 import Button from "@/components/Button";
 import Card from "@/components/Card";
+
 export default function Account() {
 	return (
 		// TODO: maybe split up cards into thier own components i.e profile card etc
-		<div className="min-h-screen bg-stone-100">
-			<div className="px-4 md:px-8 lg:px-16 py-4 md:py-6">
+		<div className="min-h-screen bg-stone-50">
+			<div className="container mx-auto px-4 py-6">
 				<div className="max-w-4xl mx-auto">
 					{/* profile section */}
-					<div className="mb-6 md:h-[100px]">
-						<Card className="md:h-full">
-							<div className="flex items-center gap-4 h-full py-4 md:py-0 px-3">
+					<div className="mb-6">
+						<Card className="p-4 md:p-6">
+							<div className="flex items-center gap-4">
 								<div className="w-16 h-16 md:w-20 md:h-20 bg-primary rounded-full flex items-center justify-center text-white text-2xl font-bold flex-shrink-0">
 									{/* TODO: ADD in Avatar */}
 									DM
 								</div>
 								<div className="flex-1 min-w-0">
-									<h1 className="text-xl md:text-2xl font-bold text-dark">
+									<h1 className="text-xl md:text-2xl font-display font-bold text-dark">
 										Dan Mallett
 									</h1>
-									<p className="font-sans text-gray-600">
+									<p className="font-sans text-gray-600 text-sm md:text-base">
 										dan.mallett@example.com
 									</p>
-									<p className="font-sans text-sm text-gray-500">
+									<p className="font-sans text-xs md:text-sm text-gray-500">
 										Member since September 2025
 									</p>
 								</div>
 								<Button variant="secondary" className="hidden md:block">
+									Edit Profile
+								</Button>
+							</div>
+							<div className="mt-4 md:hidden">
+								<Button variant="secondary" className="w-full">
 									Edit Profile
 								</Button>
 							</div>
@@ -38,13 +44,13 @@ export default function Account() {
 					</div> */}
 
 					<div className="mb-6">
-						<Card className="md:h-[60px]">
-							<div className="md:flex md:items-center md:justify-between h-full py-4 md:py-0">
-								<div className="mb-3 md:mb-0">
-									<h2 className="text-lg font-serif font-semibold text-dark px-4">
+						<Card className="p-4 md:p-6">
+							<div className="md:flex md:items-center md:justify-between">
+								<div className="mb-4 md:mb-0">
+									<h2 className="text-lg font-display font-semibold text-dark">
 										Usage This Month
 									</h2>
-									<p className="font-sans text-sm text-gray-600 px-4">
+									<p className="font-sans text-sm text-gray-600">
 										27 of 100 stories unlocked
 									</p>
 								</div>
@@ -61,10 +67,10 @@ export default function Account() {
 					</div>
 
 					<div className="mb-6">
-						<Card className="md:h-[80px]">
-							<div className="md:flex md:items-center md:justify-between h-full py-4 md:py-0">
-								<div className="mb-4 md:mb-0 px-3">
-									<h2 className="text-lg font-serif font-semibold text-dark">
+						<Card className="p-4 md:p-6">
+							<div className="md:flex md:items-center md:justify-between">
+								<div className="mb-4 md:mb-0">
+									<h2 className="text-lg font-display font-semibold text-dark">
 										Current Plan
 									</h2>
 									<p className="font-sans text-gray-600">
@@ -74,7 +80,11 @@ export default function Account() {
 										Renews monthly
 									</p>
 								</div>
-								<Button variant="primary" className="mx-3" size="default">
+								<Button
+									variant="primary"
+									className="w-full md:w-auto"
+									size="default"
+								>
 									Upgrade Plan
 								</Button>
 							</div>
@@ -118,11 +128,11 @@ export default function Account() {
 									saved: "1 month ago",
 								},
 							].map((location, index) => (
-								<Card key={index} className="md:h-[100px]">
-									<div className="flex items-center gap-4 h-full py-3 md:py-0">
+								<Card key={index} className="p-4">
+									<div className="flex items-center gap-4">
 										<div className="w-16 h-16 md:w-20 md:h-20 bg-gray-200 rounded-lg flex-shrink-0"></div>
 										<div className="flex-1 min-w-0">
-											<h3 className="font-serif font-semibold text-dark truncate">
+											<h3 className="font-display font-semibold text-dark truncate mb-1">
 												{location.name}
 											</h3>
 											<span className="inline-block px-2 py-1 text-xs font-sans bg-secondary text-dark rounded-full mb-1">
@@ -140,7 +150,7 @@ export default function Account() {
 												variant="icon"
 												className="min-h-[32px] min-w-[32px]"
 											>
-												Remove
+												×
 											</Button>
 										</div>
 									</div>
@@ -149,6 +159,120 @@ export default function Account() {
 						</div>
 					</div>
 					{/* ACCOUNT SETTINGS */}
+					<div className="mb-6">
+						<h2 className="text-xl font-serif font-semibold text-dark mb-4">
+							Account Settings
+						</h2>
+						<div className="space-y-3">
+							<Card>
+								<Button
+									variant="icon"
+									className="w-full flex items-center justify-between text-left p-4"
+								>
+									<span className="font-sans text-dark">
+										Notification Preferences
+									</span>
+									<svg
+										className="w-5 h-5 text-gray-400"
+										fill="none"
+										stroke="currentColor"
+										viewBox="0 0 24 24"
+									>
+										<path
+											strokeLinecap="round"
+											strokeLinejoin="round"
+											strokeWidth={2}
+											d="M9 5l7 7-7 7"
+										/>
+									</svg>
+								</Button>
+							</Card>
+
+							<Card>
+								<Button
+									variant="icon"
+									className="w-full flex items-center justify-between text-left p-4"
+								>
+									<span className="font-sans text-dark">Privacy & Data</span>
+									<svg
+										className="w-5 h-5 text-gray-400"
+										fill="none"
+										stroke="currentColor"
+										viewBox="0 0 24 24"
+									>
+										<path
+											strokeLinecap="round"
+											strokeLinejoin="round"
+											strokeWidth={2}
+											d="M9 5l7 7-7 7"
+										/>
+									</svg>
+								</Button>
+							</Card>
+
+							<Card>
+								<Button
+									variant="icon"
+									className="w-full flex items-center justify-between text-left p-4"
+								>
+									<span className="font-sans text-dark">Help & Support</span>
+									<svg
+										className="w-5 h-5 text-gray-400"
+										fill="none"
+										stroke="currentColor"
+										viewBox="0 0 24 24"
+									>
+										<path
+											strokeLinecap="round"
+											strokeLinejoin="round"
+											strokeWidth={2}
+											d="M9 5l7 7-7 7"
+										/>
+									</svg>
+								</Button>
+							</Card>
+						</div>
+					</div>
+					{/* UPGRADE SECTION */}
+					<div className="mb-20 md:mb-8">
+						<Card className="bg-gradient-to-r from-accent/20 to-accent/10 p-6">
+							<div className="md:flex md:items-center md:justify-between">
+								<div className="mb-4 md:mb-0">
+									<h3 className="font-display font-semibold text-dark mb-1">
+										Unlock unlimited stories
+									</h3>
+									<p className="font-sans text-sm text-gray-600">
+										Get premium access to all location stories and features.
+									</p>
+								</div>
+								<Button
+									variant="primary"
+									size="default"
+									className="w-full md:w-auto"
+								>
+									Upgrade Now
+								</Button>
+							</div>
+						</Card>
+					</div>
+				</div>
+			</div>
+
+			{/* MOBILE BOTTOM NAVIGATION */}
+			<div className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-white shadow-lg border-t">
+				<div className="flex items-center justify-around h-full px-4">
+					<button className="flex flex-col items-center justify-center min-h-[48px] min-w-[48px]">
+						<span className="text-xs font-sans text-gray-500">Explore</span>
+					</button>
+					<button className="flex flex-col items-center justify-center min-h-[48px] min-w-[48px]">
+						<span className="text-xs font-sans text-gray-500">Tours</span>
+					</button>
+					<button className="flex flex-col items-center justify-center min-h-[48px] min-w-[48px]">
+						<span className="text-xs font-sans text-gray-500">Assistant</span>
+					</button>
+					<button className="flex flex-col items-center justify-center min-h-[48px] min-w-[48px]">
+						<span className="text-xs font-sans text-primary">Account</span>
+					</button>
 				</div>
 			</div>
 		</div>
