@@ -4,9 +4,22 @@ import Link from "next/link";
 import { useState } from "react";
 import { IoCloseSharp } from "react-icons/io5";
 import { GiHamburgerMenu } from "react-icons/gi";
+import { FiUser, FiLogOut } from "react-icons/fi";
+import { useAuth } from "../contexts/AuthContext";
+import AuthModal from "./AuthModal";
+import Button from "./Button";
 
 const Header = () => {
 	const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
+	const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+	const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
+	const [authMode, setAuthMode] = useState<"login" | "signup">("login");
+	const { user, logout } = useAuth();
+
+	const handleAuthClick = (mode: "login" | "signup") => {
+		setAuthMode(mode);
+		setIsAuthModalOpen(true);
+	};
 
 	return (
 		<header className="sticky top-0 z-50 bg-light shadow-md border-b border-neutral">
@@ -39,15 +52,86 @@ const Header = () => {
 						>
 							Assistant
 						</Link>
-						<Link
-							href="/account"
-							className="text-gray-700 hover:text-primary px-3 py-2 text-sm font-medium transition-colors duration-200"
-						>
-							Account
-						</Link>
-						<Link href="/login" className="btn btn-primary ml-4">
-							Login
-						</Link>
+						{user ? (
+							<div className="relative ml-4">
+								<div
+									className="flex items-center space-x-2 px-3 py-2 bg-neutral/30 rounded-lg cursor-pointer hover:bg-neutral/40 transition-colors"
+									onMouseEnter={() => setIsUserDropdownOpen(true)}
+									onMouseLeave={() => setIsUserDropdownOpen(false)}
+								>
+									{user.avatar ? (
+										<img
+											src={user.avatar}
+											alt={user.name}
+											className="w-6 h-6 rounded-full object-cover"
+										/>
+									) : (
+										<FiUser size={16} className="text-primary" />
+									)}
+									<span className="text-sm font-medium text-dark">
+										{user.name}
+									</span>
+									<svg
+										className="w-4 h-4 text-gray-400"
+										fill="none"
+										stroke="currentColor"
+										viewBox="0 0 24 24"
+									>
+										<path
+											strokeLinecap="round"
+											strokeLinejoin="round"
+											strokeWidth={2}
+											d="M19 9l-7 7-7-7"
+										/>
+									</svg>
+								</div>
+
+								{/* Dropdown Menu */}
+								{isUserDropdownOpen && (
+									<div
+										className="absolute right-0 mt-0 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50"
+										onMouseEnter={() => setIsUserDropdownOpen(true)}
+										onMouseLeave={() => setIsUserDropdownOpen(false)}
+									>
+										<Link
+											href="/account"
+											className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+											onClick={() => setIsUserDropdownOpen(false)}
+										>
+											<FiUser size={16} className="mr-3 text-gray-400" />
+											View Account
+										</Link>
+										<button
+											onClick={() => {
+												logout();
+												setIsUserDropdownOpen(false);
+											}}
+											className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors text-left hover:cursor-pointer"
+										>
+											<FiLogOut size={16} className="mr-3 text-gray-400" />
+											Sign Out
+										</button>
+									</div>
+								)}
+							</div>
+						) : (
+							<div className="flex items-center space-x-2 ml-4">
+								<Button
+									variant="secondary"
+									size="small"
+									onClick={() => handleAuthClick("login")}
+								>
+									Login
+								</Button>
+								<Button
+									variant="primary"
+									size="small"
+									onClick={() => handleAuthClick("signup")}
+								>
+									Sign Up
+								</Button>
+							</div>
+						)}
 					</nav>
 
 					{/* Mobile menu button */}
@@ -90,23 +174,78 @@ const Header = () => {
 						>
 							Assistant
 						</Link>
-						<Link
-							href="/account"
-							className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-primary hover:bg-gray-50 rounded-md transition-colors"
-							onClick={() => setMobileMenuOpen(false)}
-						>
-							Account
-						</Link>
-						<Link
-							href="/login"
-							className="btn btn-primary w-full mt-4 sm:mx-3"
-							onClick={() => setMobileMenuOpen(false)}
-						>
-							Login
-						</Link>
+						{user ? (
+							<div className="px-3 py-2">
+								<div className="flex items-center space-x-2 p-3 bg-neutral/30 rounded-lg mb-3">
+									{user.avatar ? (
+										<img
+											src={user.avatar}
+											alt={user.name}
+											className="w-8 h-8 rounded-full object-cover"
+										/>
+									) : (
+										<FiUser size={20} className="text-primary" />
+									)}
+									<div>
+										<p className="font-medium text-dark text-sm">{user.name}</p>
+										<p className="text-xs text-dark/60">{user.email}</p>
+									</div>
+								</div>
+								<div className="space-y-1">
+									<Link
+										href="/account"
+										className="w-full flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+										onClick={() => setMobileMenuOpen(false)}
+									>
+										<FiUser size={16} className="mr-3 text-gray-400" />
+										View Account
+									</Link>
+									<button
+										onClick={() => {
+											logout();
+											setMobileMenuOpen(false);
+										}}
+										className="w-full flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors text-left"
+									>
+										<FiLogOut size={16} className="mr-3 text-gray-400" />
+										Sign Out
+									</button>
+								</div>
+							</div>
+						) : (
+							<div className="px-3 space-y-2 mt-4">
+								<Button
+									variant="secondary"
+									onClick={() => {
+										handleAuthClick("login");
+										setMobileMenuOpen(false);
+									}}
+									className="w-full"
+								>
+									Login
+								</Button>
+								<Button
+									variant="primary"
+									onClick={() => {
+										handleAuthClick("signup");
+										setMobileMenuOpen(false);
+									}}
+									className="w-full"
+								>
+									Sign Up
+								</Button>
+							</div>
+						)}
 					</div>
 				</div>
 			)}
+
+			{/* Auth Modal */}
+			<AuthModal
+				isOpen={isAuthModalOpen}
+				onClose={() => setIsAuthModalOpen(false)}
+				defaultMode={authMode}
+			/>
 		</header>
 	);
 };

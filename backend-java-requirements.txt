@@ -1,0 +1,1527 @@
+TALETRACE BACKEND - JAVA REQUIREMENTS & IMPLEMENTATION NOTES
+============================================================
+
+PROJECT OVERVIEW:
+- Location-based storytelling platform
+- Users can explore locations, take quizzes, go on tours
+- Need geospatial data, user management, content management
+
+TECH STACK RECOMMENDATION:
+- Framework: Spring Boot 3.x
+- Database: PostgreSQL with PostGIS extension
+- Authentication: Spring Security + JWT
+- ORM: Spring Data JPA + Hibernate Spatial
+- File Storage: AWS S3 or MinIO
+- Caching: Redis with Spring Cache
+- Message Queue: RabbitMQ or Apache Kafka
+- Maps API: Google Maps API or Mapbox
+- Build Tool: Maven or Gradle
+- Testing: JUnit 5 + Testcontainers
+
+=====================================
+RECOMMENDED FILE STRUCTURE
+=====================================
+
+taletrace-backend/
+├── src/
+│   ├── main/
+│   │   ├── java/
+│   │   │   └── com/
+│   │   │       └── taletrace/
+│   │   │           ├── TaletraceApplication.java    # Main Spring Boot class
+│   │   │           │
+│   │   │           ├── config/                      # Configuration classes
+│   │   │           │   ├── DatabaseConfig.java      # Database & JPA config
+│   │   │           │   ├── SecurityConfig.java      # Spring Security setup
+│   │   │           │   ├── RedisConfig.java         # Cache configuration
+│   │   │           │   ├── AwsConfig.java           # AWS S3 configuration
+│   │   │           │   ├── JwtConfig.java           # JWT token configuration
+│   │   │           │   └── WebConfig.java           # CORS, interceptors
+│   │   │           │
+│   │   │           ├── controller/                  # REST API controllers
+│   │   │           │   ├── AuthController.java      # Authentication endpoints
+│   │   │           │   ├── LocationController.java  # Location CRUD endpoints
+│   │   │           │   ├── StoryController.java     # Story management
+│   │   │           │   ├── QuizController.java      # Quiz system endpoints
+│   │   │           │   ├── TourController.java      # Tour management
+│   │   │           │   ├── UserController.java      # User profile management
+│   │   │           │   ├── LeaderboardController.java # Gamification
+│   │   │           │   └── FileUploadController.java # Media upload
+│   │   │           │
+│   │   │           ├── dto/                         # Data Transfer Objects
+│   │   │           │   ├── request/                 # Request DTOs
+│   │   │           │   │   ├── UserRegistrationRequest.java
+│   │   │           │   │   ├── CreateLocationRequest.java
+│   │   │           │   │   ├── CreateStoryRequest.java
+│   │   │           │   │   ├── CreateQuizRequest.java
+│   │   │           │   │   └── CreateTourRequest.java
+│   │   │           │   ├── response/                # Response DTOs
+│   │   │           │   │   ├── AuthResponse.java
+│   │   │           │   │   ├── LocationDTO.java
+│   │   │           │   │   ├── StoryDTO.java
+│   │   │           │   │   ├── QuizResultDTO.java
+│   │   │           │   │   └── TourNavigationDTO.java
+│   │   │           │   └── common/                  # Shared DTOs
+│   │   │           │       ├── PagedResponse.java
+│   │   │           │       ├── ApiResponse.java
+│   │   │           │       └── ErrorResponse.java
+│   │   │           │
+│   │   │           ├── entity/                      # JPA Entities
+│   │   │           │   ├── User.java                # User entity
+│   │   │           │   ├── Location.java            # Location with spatial data
+│   │   │           │   ├── Story.java               # Story entity
+│   │   │           │   ├── StoryImage.java          # Story media
+│   │   │           │   ├── Quiz.java                # Quiz entity
+│   │   │           │   ├── Question.java            # Quiz questions
+│   │   │           │   ├── QuizAttempt.java         # User quiz attempts
+│   │   │           │   ├── Tour.java                # Tour entity
+│   │   │           │   ├── TourStop.java            # Tour waypoints
+│   │   │           │   ├── TourProgress.java        # User tour progress
+│   │   │           │   ├── UserProfile.java         # User gamification data
+│   │   │           │   ├── Badge.java               # Achievement badges
+│   │   │           │   └── BaseEntity.java          # Common entity fields
+│   │   │           │
+│   │   │           ├── repository/                  # Data access layer
+│   │   │           │   ├── UserRepository.java      # User data operations
+│   │   │           │   ├── LocationRepository.java  # Spatial queries
+│   │   │           │   ├── StoryRepository.java     # Story data operations
+│   │   │           │   ├── QuizRepository.java      # Quiz data operations
+│   │   │           │   ├── QuizAttemptRepository.java
+│   │   │           │   ├── TourRepository.java      # Tour data operations
+│   │   │           │   ├── TourProgressRepository.java
+│   │   │           │   ├── UserProfileRepository.java
+│   │   │           │   └── BadgeRepository.java
+│   │   │           │
+│   │   │           ├── service/                     # Business logic layer
+│   │   │           │   ├── AuthService.java         # Authentication logic
+│   │   │           │   ├── LocationService.java     # Location operations
+│   │   │           │   ├── StoryService.java        # Story management
+│   │   │           │   ├── QuizService.java         # Quiz logic & scoring
+│   │   │           │   ├── TourService.java         # Tour navigation
+│   │   │           │   ├── FileUploadService.java   # File handling
+│   │   │           │   ├── GoogleMapsService.java   # Maps API integration
+│   │   │           │   ├── NotificationService.java # Email/notifications
+│   │   │           │   ├── AchievementService.java  # Gamification logic
+│   │   │           │   ├── LeaderboardService.java  # Leaderboard operations
+│   │   │           │   └── UserService.java         # User operations
+│   │   │           │
+│   │   │           ├── security/                    # Security components
+│   │   │           │   ├── JwtAuthenticationEntryPoint.java
+│   │   │           │   ├── JwtAuthenticationFilter.java
+│   │   │           │   ├── JwtTokenProvider.java    # JWT utility class
+│   │   │           │   ├── CustomUserDetailsService.java
+│   │   │           │   └── UserPrincipal.java       # Authentication principal
+│   │   │           │
+│   │   │           ├── util/                        # Utility classes
+│   │   │           │   ├── SpatialUtils.java        # Geospatial calculations
+│   │   │           │   ├── ValidationUtils.java     # Input validation
+│   │   │           │   ├── EmailUtils.java          # Email utilities
+│   │   │           │   ├── FileUtils.java           # File processing
+│   │   │           │   ├── CacheUtils.java          # Caching utilities
+│   │   │           │   └── DateUtils.java           # Date/time utilities
+│   │   │           │
+│   │   │           ├── exception/                   # Exception handling
+│   │   │           │   ├── GlobalExceptionHandler.java # Global error handler
+│   │   │           │   ├── ResourceNotFoundException.java
+│   │   │           │   ├── BadRequestException.java
+│   │   │           │   ├── UnauthorizedException.java
+│   │   │           │   └── ValidationException.java
+│   │   │           │
+│   │   │           ├── event/                       # Application events
+│   │   │           │   ├── LocationVisitedEvent.java
+│   │   │           │   ├── QuizCompletedEvent.java
+│   │   │           │   ├── TourCompletedEvent.java
+│   │   │           │   └── StoryCreatedEvent.java
+│   │   │           │
+│   │   │           └── enums/                       # Enumeration classes
+│   │   │               ├── Role.java               # User roles
+│   │   │               ├── StoryType.java          # Story categories
+│   │   │               ├── QuestionType.java       # Question types
+│   │   │               ├── Difficulty.java         # Difficulty levels
+│   │   │               ├── TourStatus.java         # Tour progress status
+│   │   │               ├── UserLevel.java          # Gamification levels
+│   │   │               └── BadgeType.java          # Badge categories
+│   │   │
+│   │   └── resources/
+│   │       ├── application.properties              # Main configuration
+│   │       ├── application-dev.properties          # Development config
+│   │       ├── application-prod.properties         # Production config
+│   │       ├── application-test.properties         # Test config
+│   │       ├── db/
+│   │       │   └── migration/                      # Flyway migrations
+│   │       │       ├── V1__Create_initial_schema.sql
+│   │       │       ├── V2__Add_spatial_indexes.sql
+│   │       │       ├── V3__Create_story_tables.sql
+│   │       │       ├── V4__Create_quiz_tables.sql
+│   │       │       ├── V5__Create_tour_tables.sql
+│   │       │       └── V6__Create_gamification_tables.sql
+│   │       ├── static/                             # Static web assets
+│   │       │   ├── images/
+│   │       │   ├── css/
+│   │       │   └── js/
+│   │       └── templates/                          # Email templates
+│   │           ├── welcome-email.html
+│   │           ├── password-reset.html
+│   │           └── achievement-notification.html
+│   │
+│   └── test/
+│       └── java/
+│           └── com/
+│               └── taletrace/
+│                   ├── TaletraceApplicationTests.java
+│                   ├── controller/                 # Controller tests
+│                   │   ├── AuthControllerTest.java
+│                   │   ├── LocationControllerTest.java
+│                   │   ├── StoryControllerTest.java
+│                   │   ├── QuizControllerTest.java
+│                   │   └── TourControllerTest.java
+│                   ├── service/                    # Service layer tests
+│                   │   ├── AuthServiceTest.java
+│                   │   ├── LocationServiceTest.java
+│                   │   ├── StoryServiceTest.java
+│                   │   ├── QuizServiceTest.java
+│                   │   └── TourServiceTest.java
+│                   ├── repository/                 # Repository tests
+│                   │   ├── LocationRepositoryTest.java
+│                   │   ├── StoryRepositoryTest.java
+│                   │   └── QuizRepositoryTest.java
+│                   ├── integration/                # Integration tests
+│                   │   ├── AuthIntegrationTest.java
+│                   │   ├── LocationIntegrationTest.java
+│                   │   └── QuizIntegrationTest.java
+│                   └── util/                       # Utility tests
+│                       ├── SpatialUtilsTest.java
+│                       └── ValidationUtilsTest.java
+│
+├── docker/                                         # Docker configuration
+│   ├── Dockerfile
+│   ├── Dockerfile.dev                              # Development setup
+│   ├── docker-compose.yml                          # Local environment
+│   └── docker-compose.prod.yml                     # Production environment
+│
+├── docs/                                           # Documentation
+│   ├── api/                                        # API documentation
+│   │   ├── authentication.md
+│   │   ├── locations.md
+│   │   ├── stories.md
+│   │   ├── quizzes.md
+│   │   └── tours.md
+│   ├── deployment.md                               # Deployment guide
+│   ├── development.md                              # Development setup
+│   ├── database-schema.md                          # Database documentation
+│   └── architecture.md                             # System architecture
+│
+├── scripts/                                        # Build and deployment scripts
+│   ├── build.sh                                    # Build script
+│   ├── deploy.sh                                   # Deployment script
+│   ├── seed-data.sql                               # Sample data
+│   └── backup-db.sh                                # Database backup
+│
+├── .github/                                        # GitHub Actions
+│   └── workflows/
+│       ├── ci.yml                                  # Continuous Integration
+│       ├── cd.yml                                  # Continuous Deployment
+│       └── security-scan.yml                       # Security scanning
+│
+├── build.gradle                                    # Gradle build configuration
+├── settings.gradle                                 # Gradle settings
+├── gradle.properties                               # Gradle properties
+├── gradlew                                         # Gradle wrapper (Unix)
+├── gradlew.bat                                     # Gradle wrapper (Windows)
+├── .env.example                                    # Environment variables template
+├── .gitignore                                      # Git ignore rules
+├── docker-compose.yml                              # Development environment
+├── README.md                                       # Project documentation
+└── CHANGELOG.md                                    # Version history
+
+KEY STRUCTURE PRINCIPLES:
+- Clean Architecture with distinct layers (Controller → Service → Repository → Entity)
+- Package by feature/domain rather than by layer
+- Separation of DTOs from entities for API boundaries
+- Comprehensive security configuration
+- Environment-specific configuration files
+- Extensive test coverage with different test types
+- Database migrations with Flyway for version control
+- Docker support for containerized deployment
+
+=====================================
+CORE REQUIREMENTS & IMPLEMENTATION
+=====================================
+
+1. USER MANAGEMENT & AUTHENTICATION
+-----------------------------------
+TODO: Implement user registration, login, profile management with Spring Security
+
+// User Entity
+@Entity
+@Table(name = "users")
+public class User {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    
+    @Column(unique = true, nullable = false)
+    private String email;
+    
+    @Column(unique = true, nullable = false)
+    private String username;
+    
+    @Column(nullable = false)
+    private String password;
+    
+    @Enumerated(EnumType.STRING)
+    private Role role = Role.USER;
+    
+    @CreationTimestamp
+    private LocalDateTime createdAt;
+    
+    // Getters, setters, constructors
+}
+
+// Authentication Controller
+@RestController
+@RequestMapping("/api/auth")
+@Validated
+public class AuthController {
+    
+    @Autowired
+    private AuthService authService;
+    
+    @PostMapping("/register")
+    public ResponseEntity<AuthResponse> register(@Valid @RequestBody UserRegistrationRequest request) {
+        // TODO: Validate email format and uniqueness
+        // TODO: Hash password with BCrypt
+        // TODO: Save user to database
+        // TODO: Generate JWT token
+        // TODO: Return user info + token
+        return ResponseEntity.ok(authService.registerUser(request));
+    }
+    
+    @PostMapping("/login")
+    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
+        // TODO: Authenticate user credentials
+        // TODO: Generate JWT token
+        // TODO: Return user info + token
+        return ResponseEntity.ok(authService.authenticateUser(request));
+    }
+    
+    @PostMapping("/refresh")
+    public ResponseEntity<AuthResponse> refreshToken(@RequestHeader("Authorization") String token) {
+        // TODO: Validate refresh token
+        // TODO: Generate new access token
+        return ResponseEntity.ok(authService.refreshToken(token));
+    }
+}
+
+// JWT Configuration
+@Component
+public class JwtUtil {
+    @Value("${jwt.secret}")
+    private String jwtSecret;
+    
+    @Value("${jwt.expiration}")
+    private int jwtExpirationMs;
+    
+    public String generateToken(UserDetails userDetails) {
+        // TODO: Create JWT with user claims
+        return Jwts.builder()
+                .setSubject(userDetails.getUsername())
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + jwtExpirationMs))
+                .signWith(SignatureAlgorithm.HS256, jwtSecret)
+                .compact();
+    }
+    
+    // TODO: Add token validation methods
+}
+
+// Security Configuration
+@Configuration
+@EnableWebSecurity
+@EnableMethodSecurity(prePostEnabled = true)
+public class SecurityConfig {
+    
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+    
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        return http
+                .cors().and()
+                .csrf().disable()
+                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                .and()
+                .authorizeHttpRequests(auth -> auth
+                    .requestMatchers("/api/auth/**").permitAll()
+                    .requestMatchers("/api/public/**").permitAll()
+                    .anyRequest().authenticated()
+                )
+                .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
+                .build();
+    }
+}
+
+MAVEN DEPENDENCIES NEEDED:
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-security</artifactId>
+</dependency>
+<dependency>
+    <groupId>io.jsonwebtoken</groupId>
+    <artifactId>jjwt-api</artifactId>
+    <version>0.11.5</version>
+</dependency>
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-validation</artifactId>
+</dependency>
+```
+
+=====================================
+
+2. GEOSPATIAL DATA & LOCATION SERVICES
+--------------------------------------
+TODO: Handle location data with PostGIS, implement proximity searches
+
+// Location Entity with Spatial Data
+@Entity
+@Table(name = "locations")
+public class Location {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    
+    @Column(nullable = false)
+    private String name;
+    
+    @Column(columnDefinition = "TEXT")
+    private String description;
+    
+    // PostGIS Geography Point - stores lat/lng with spatial indexing
+    @Column(columnDefinition = "geography(Point, 4326)")
+    private Point coordinates;
+    
+    private String address;
+    private String category;
+    
+    @CreationTimestamp
+    private LocalDateTime createdAt;
+    
+    // Helper methods to work with coordinates
+    public double getLatitude() {
+        return coordinates != null ? coordinates.getY() : 0.0;
+    }
+    
+    public double getLongitude() {
+        return coordinates != null ? coordinates.getX() : 0.0;
+    }
+    
+    public void setCoordinates(double latitude, double longitude) {
+        GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(), 4326);
+        this.coordinates = geometryFactory.createPoint(new Coordinate(longitude, latitude));
+    }
+}
+
+// Location Repository with Spatial Queries
+@Repository
+public interface LocationRepository extends JpaRepository<Location, Long> {
+    
+    // Find locations within radius (in meters) using PostGIS ST_DWithin
+    @Query(value = """
+        SELECT l.*, ST_Distance(l.coordinates, ST_Point(:longitude, :latitude)::geography) as distance 
+        FROM locations l 
+        WHERE ST_DWithin(l.coordinates, ST_Point(:longitude, :latitude)::geography, :radiusMeters)
+        ORDER BY distance
+        """, nativeQuery = true)
+    List<LocationWithDistance> findNearbyLocations(
+            @Param("latitude") double latitude, 
+            @Param("longitude") double longitude, 
+            @Param("radiusMeters") double radiusMeters);
+    
+    // Find locations within bounding box for map viewport
+    @Query(value = """
+        SELECT * FROM locations 
+        WHERE ST_Intersects(coordinates, ST_MakeEnvelope(:minLng, :minLat, :maxLng, :maxLat, 4326))
+        """, nativeQuery = true)
+    List<Location> findWithinBounds(
+            @Param("minLat") double minLat, 
+            @Param("minLng") double minLng,
+            @Param("maxLat") double maxLat, 
+            @Param("maxLng") double maxLng);
+}
+
+// Location Controller
+@RestController
+@RequestMapping("/api/locations")
+@CrossOrigin(origins = "*")
+public class LocationController {
+    
+    @Autowired
+    private LocationService locationService;
+    
+    @Autowired
+    private GoogleMapsService mapsService;
+    
+    @GetMapping("/nearby")
+    public ResponseEntity<List<LocationDTO>> getNearbyLocations(
+            @RequestParam double lat,
+            @RequestParam double lng,
+            @RequestParam(defaultValue = "5000") double radiusMeters) {
+        
+        // TODO: Validate coordinates
+        // TODO: Apply radius limits (max 50km)
+        // TODO: Convert entities to DTOs
+        List<LocationDTO> locations = locationService.findNearbyLocations(lat, lng, radiusMeters);
+        return ResponseEntity.ok(locations);
+    }
+    
+    @GetMapping("/{locationId}/directions")
+    public ResponseEntity<DirectionsResponse> getDirections(
+            @PathVariable Long locationId,
+            @RequestParam double userLat,
+            @RequestParam double userLng,
+            @RequestParam(defaultValue = "WALKING") String travelMode) {
+        
+        // TODO: Get location coordinates
+        // TODO: Call Google Maps Directions API
+        // TODO: Format and return route information
+        return ResponseEntity.ok(mapsService.getDirections(userLat, userLng, locationId, travelMode));
+    }
+    
+    @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<LocationDTO> createLocation(@Valid @RequestBody CreateLocationRequest request) {
+        // TODO: Validate location data
+        // TODO: Geocode address if coordinates not provided
+        // TODO: Save to database with spatial indexing
+        return ResponseEntity.ok(locationService.createLocation(request));
+    }
+}
+
+// Google Maps Integration Service
+@Service
+public class GoogleMapsService {
+    
+    @Value("${google.maps.api.key}")
+    private String apiKey;
+    
+    private final RestTemplate restTemplate = new RestTemplate();
+    
+    public DirectionsResponse getDirections(double originLat, double originLng, 
+                                          Long destinationLocationId, String travelMode) {
+        // TODO: Get destination coordinates from database
+        // TODO: Build Google Maps API request
+        String url = String.format(
+            "https://maps.googleapis.com/maps/api/directions/json?origin=%f,%f&destination=%f,%f&mode=%s&key=%s",
+            originLat, originLng, destLat, destLng, travelMode.toLowerCase(), apiKey
+        );
+        
+        // TODO: Make API call and parse response
+        // TODO: Extract route information (duration, distance, steps)
+        // TODO: Return formatted directions
+        return restTemplate.getForObject(url, DirectionsResponse.class);
+    }
+    
+    public GeocodeResponse geocodeAddress(String address) {
+        // TODO: Convert address to coordinates using Geocoding API
+        String url = "https://maps.googleapis.com/maps/api/geocode/json?address=" + 
+                     URLEncoder.encode(address, StandardCharsets.UTF_8) + "&key=" + apiKey;
+        return restTemplate.getForObject(url, GeocodeResponse.class);
+    }
+}
+
+MAVEN DEPENDENCIES FOR SPATIAL:
+```xml
+<dependency>
+    <groupId>org.hibernate</groupId>
+    <artifactId>hibernate-spatial</artifactId>
+</dependency>
+<dependency>
+    <groupId>org.locationtech.jts</groupId>
+    <artifactId>jts-core</artifactId>
+</dependency>
+```
+
+DATABASE SETUP:
+```sql
+-- Enable PostGIS extension
+CREATE EXTENSION IF NOT EXISTS postgis;
+
+-- Create spatial index for performance
+CREATE INDEX idx_locations_coordinates ON locations USING GIST (coordinates);
+```
+
+=====================================
+
+3. STORY & CONTENT MANAGEMENT
+-----------------------------
+TODO: CRUD operations for stories, media handling, content moderation
+
+@Entity
+@Table(name = "stories")
+public class Story {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    
+    @Column(nullable = false)
+    private String title;
+    
+    @Column(columnDefinition = "TEXT", nullable = false)
+    private String content;
+    
+    @Enumerated(EnumType.STRING)
+    private StoryType storyType;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "location_id")
+    private Location location;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "author_id")
+    private User author;
+    
+    private String audioUrl;
+    
+    @OneToMany(mappedBy = "story", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("orderIndex ASC")
+    private List<StoryImage> images = new ArrayList<>();
+    
+    private boolean published = false;
+    
+    @CreationTimestamp
+    private LocalDateTime createdAt;
+    
+    @UpdateTimestamp
+    private LocalDateTime updatedAt;
+}
+
+@Entity
+@Table(name = "story_images")
+public class StoryImage {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "story_id")
+    private Story story;
+    
+    @Column(nullable = false)
+    private String imageUrl;
+    
+    private String caption;
+    
+    @Column(name = "order_index")
+    private Integer orderIndex = 0;
+}
+
+// Story Controller
+@RestController
+@RequestMapping("/api/stories")
+public class StoryController {
+    
+    @Autowired
+    private StoryService storyService;
+    
+    @PostMapping
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<StoryDTO> createStory(
+            @Valid @RequestBody CreateStoryRequest request,
+            Authentication authentication) {
+        
+        // TODO: Validate story content (length, profanity check)
+        // TODO: Associate with authenticated user
+        // TODO: Handle image uploads
+        // TODO: Queue for content moderation if needed
+        String username = authentication.getName();
+        StoryDTO story = storyService.createStory(request, username);
+        return ResponseEntity.status(HttpStatus.CREATED).body(story);
+    }
+    
+    @GetMapping("/location/{locationId}")
+    public ResponseEntity<Page<StoryDTO>> getStoriesByLocation(
+            @PathVariable Long locationId,
+            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+        
+        // TODO: Return paginated published stories for location
+        // TODO: Include author information
+        // TODO: Include image URLs
+        Page<StoryDTO> stories = storyService.getStoriesByLocation(locationId, pageable);
+        return ResponseEntity.ok(stories);
+    }
+    
+    @PostMapping("/{storyId}/images")
+    @PreAuthorize("@storyService.isOwner(#storyId, authentication.name)")
+    public ResponseEntity<StoryImageDTO> uploadImage(
+            @PathVariable Long storyId,
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(required = false) String caption) {
+        
+        // TODO: Validate file type (jpg, png, webp)
+        // TODO: Validate file size (max 5MB)
+        // TODO: Upload to S3 or file storage
+        // TODO: Create thumbnail version
+        // TODO: Save image record to database
+        return ResponseEntity.ok(storyService.addImage(storyId, file, caption));
+    }
+}
+
+// File Upload Service
+@Service
+public class FileUploadService {
+    
+    @Value("${aws.s3.bucket}")
+    private String bucketName;
+    
+    @Autowired
+    private AmazonS3 s3Client;
+    
+    public String uploadFile(MultipartFile file, String folder) throws IOException {
+        // TODO: Generate unique filename
+        String fileName = folder + "/" + UUID.randomUUID() + "_" + file.getOriginalFilename();
+        
+        // TODO: Validate file type and size
+        if (!isValidFileType(file)) {
+            throw new IllegalArgumentException("Invalid file type");
+        }
+        
+        // TODO: Upload to S3
+        ObjectMetadata metadata = new ObjectMetadata();
+        metadata.setContentType(file.getContentType());
+        metadata.setContentLength(file.getSize());
+        
+        s3Client.putObject(new PutObjectRequest(bucketName, fileName, file.getInputStream(), metadata)
+            .withCannedAcl(CannedAccessControlList.PublicRead));
+        
+        // TODO: Return public URL
+        return s3Client.getUrl(bucketName, fileName).toString();
+    }
+    
+    private boolean isValidFileType(MultipartFile file) {
+        String contentType = file.getContentType();
+        return contentType != null && (
+            contentType.equals("image/jpeg") ||
+            contentType.equals("image/png") ||
+            contentType.equals("image/webp")
+        );
+    }
+}
+
+MAVEN DEPENDENCIES FOR FILE UPLOAD:
+```xml
+<dependency>
+    <groupId>com.amazonaws</groupId>
+    <artifactId>aws-java-sdk-s3</artifactId>
+</dependency>
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-web</artifactId>
+</dependency>
+```
+
+=====================================
+
+4. QUIZ SYSTEM
+--------------
+TODO: Interactive quizzes with scoring and progress tracking
+
+@Entity
+@Table(name = "quizzes")
+public class Quiz {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    
+    @Column(nullable = false)
+    private String title;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "location_id")
+    private Location location;
+    
+    @OneToMany(mappedBy = "quiz", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OrderBy("orderIndex ASC")
+    private List<Question> questions = new ArrayList<>();
+    
+    @Enumerated(EnumType.STRING)
+    private Difficulty difficulty;
+    
+    private Integer timeLimitSeconds;
+    
+    @CreationTimestamp
+    private LocalDateTime createdAt;
+}
+
+@Entity
+@Table(name = "questions")
+public class Question {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "quiz_id")
+    private Quiz quiz;
+    
+    @Column(columnDefinition = "TEXT", nullable = false)
+    private String questionText;
+    
+    @Enumerated(EnumType.STRING)
+    private QuestionType questionType;
+    
+    @Column(name = "correct_answer")
+    private String correctAnswer;
+    
+    // Store JSON for multiple choice options
+    @Column(columnDefinition = "jsonb")
+    private String options;
+    
+    private Integer points = 10;
+    
+    @Column(columnDefinition = "TEXT")
+    private String explanation;
+    
+    @Column(name = "order_index")
+    private Integer orderIndex;
+}
+
+@Entity
+@Table(name = "quiz_attempts")
+public class QuizAttempt {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private User user;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "quiz_id")
+    private Quiz quiz;
+    
+    private Integer score;
+    private Integer totalPoints;
+    
+    @CreationTimestamp
+    private LocalDateTime startedAt;
+    
+    private LocalDateTime completedAt;
+    
+    // Store user answers as JSON
+    @Column(columnDefinition = "jsonb")
+    private String answers;
+    
+    @Enumerated(EnumType.STRING)
+    private AttemptStatus status = AttemptStatus.IN_PROGRESS;
+}
+
+// Quiz Controller
+@RestController
+@RequestMapping("/api/quizzes")
+public class QuizController {
+    
+    @Autowired
+    private QuizService quizService;
+    
+    @GetMapping("/location/{locationId}")
+    public ResponseEntity<List<QuizSummaryDTO>> getQuizzesByLocation(@PathVariable Long locationId) {
+        // TODO: Return available quizzes for location (without answers)
+        return ResponseEntity.ok(quizService.getQuizzesByLocation(locationId));
+    }
+    
+    @PostMapping("/{quizId}/start")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<QuizAttemptDTO> startQuiz(
+            @PathVariable Long quizId,
+            Authentication authentication) {
+        
+        // TODO: Create new quiz attempt
+        // TODO: Return quiz questions without correct answers
+        // TODO: Start timer if quiz has time limit
+        String username = authentication.getName();
+        QuizAttemptDTO attempt = quizService.startQuizAttempt(quizId, username);
+        return ResponseEntity.ok(attempt);
+    }
+    
+    @PostMapping("/attempts/{attemptId}/submit")
+    @PreAuthorize("@quizService.isAttemptOwner(#attemptId, authentication.name)")
+    public ResponseEntity<QuizResultDTO> submitQuiz(
+            @PathVariable Long attemptId,
+            @Valid @RequestBody SubmitQuizRequest request) {
+        
+        // TODO: Validate attempt is still active
+        // TODO: Check time limit not exceeded
+        // TODO: Calculate score by comparing answers
+        // TODO: Award points and badges to user
+        // TODO: Return detailed results with explanations
+        QuizResultDTO result = quizService.submitQuizAttempt(attemptId, request.getAnswers());
+        return ResponseEntity.ok(result);
+    }
+}
+
+// Quiz Service for Business Logic
+@Service
+@Transactional
+public class QuizService {
+    
+    @Autowired
+    private QuizRepository quizRepository;
+    
+    @Autowired
+    private QuizAttemptRepository attemptRepository;
+    
+    @Autowired
+    private UserService userService;
+    
+    public QuizResultDTO submitQuizAttempt(Long attemptId, Map<Long, String> userAnswers) {
+        QuizAttempt attempt = attemptRepository.findById(attemptId)
+            .orElseThrow(() -> new EntityNotFoundException("Quiz attempt not found"));
+        
+        // TODO: Validate attempt is in progress
+        if (attempt.getStatus() != AttemptStatus.IN_PROGRESS) {
+            throw new IllegalStateException("Quiz attempt already completed");
+        }
+        
+        // TODO: Check time limit
+        if (isTimeExpired(attempt)) {
+            throw new IllegalStateException("Time limit exceeded");
+        }
+        
+        // TODO: Calculate score
+        Quiz quiz = attempt.getQuiz();
+        int score = calculateScore(quiz.getQuestions(), userAnswers);
+        
+        // TODO: Update attempt
+        attempt.setScore(score);
+        attempt.setCompletedAt(LocalDateTime.now());
+        attempt.setStatus(AttemptStatus.COMPLETED);
+        attempt.setAnswers(objectMapper.writeValueAsString(userAnswers));
+        
+        // TODO: Award points to user
+        userService.addPoints(attempt.getUser().getId(), score);
+        
+        // TODO: Check for badge achievements
+        checkAndAwardBadges(attempt.getUser(), quiz);
+        
+        return buildQuizResult(attempt, quiz.getQuestions(), userAnswers);
+    }
+}
+
+=====================================
+
+5. TOURS & ROUTE PLANNING
+-------------------------
+TODO: Multi-stop guided tours with navigation
+
+@Entity
+@Table(name = "tours")
+public class Tour {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    
+    @Column(nullable = false)
+    private String name;
+    
+    @Column(columnDefinition = "TEXT")
+    private String description;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "creator_id")
+    private User creator;
+    
+    private Integer estimatedDurationMinutes;
+    
+    @Enumerated(EnumType.STRING)
+    private Difficulty difficulty;
+    
+    @OneToMany(mappedBy = "tour", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("orderIndex ASC")
+    private List<TourStop> stops = new ArrayList<>();
+    
+    private boolean published = false;
+    
+    @CreationTimestamp
+    private LocalDateTime createdAt;
+    
+    // Calculate total distance using stops
+    public double getTotalDistanceKm() {
+        // TODO: Sum distances between consecutive stops
+        return 0.0;
+    }
+}
+
+@Entity
+@Table(name = "tour_stops")
+public class TourStop {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "tour_id")
+    private Tour tour;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "location_id")
+    private Location location;
+    
+    @Column(name = "order_index", nullable = false)
+    private Integer orderIndex;
+    
+    @Column(columnDefinition = "TEXT")
+    private String instructions;
+    
+    private Integer estimatedTimeMinutes;
+    
+    // Audio instructions for navigation
+    private String audioInstructionsUrl;
+}
+
+@Entity
+@Table(name = "tour_progress")
+public class TourProgress {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private User user;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "tour_id")
+    private Tour tour;
+    
+    private Integer currentStopIndex = 0;
+    
+    @Enumerated(EnumType.STRING)
+    private TourStatus status = TourStatus.NOT_STARTED;
+    
+    @CreationTimestamp
+    private LocalDateTime startedAt;
+    
+    private LocalDateTime completedAt;
+    
+    // Track visited stops
+    @ElementCollection
+    @CollectionTable(name = "visited_stops")
+    private Set<Integer> visitedStops = new HashSet<>();
+}
+
+// Tour Controller
+@RestController
+@RequestMapping("/api/tours")
+public class TourController {
+    
+    @Autowired
+    private TourService tourService;
+    
+    @GetMapping
+    public ResponseEntity<Page<TourSummaryDTO>> getAllTours(
+            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable,
+            @RequestParam(required = false) String difficulty,
+            @RequestParam(required = false) Double maxDuration) {
+        
+        // TODO: Filter tours by criteria
+        // TODO: Return published tours only
+        Page<TourSummaryDTO> tours = tourService.findTours(pageable, difficulty, maxDuration);
+        return ResponseEntity.ok(tours);
+    }
+    
+    @PostMapping("/{tourId}/start")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<TourProgressDTO> startTour(
+            @PathVariable Long tourId,
+            Authentication authentication) {
+        
+        // TODO: Create or resume tour progress
+        // TODO: Return first stop information
+        String username = authentication.getName();
+        TourProgressDTO progress = tourService.startTour(tourId, username);
+        return ResponseEntity.ok(progress);
+    }
+    
+    @GetMapping("/{tourId}/navigation")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<TourNavigationDTO> getTourNavigation(
+            @PathVariable Long tourId,
+            @RequestParam double currentLat,
+            @RequestParam double currentLng,
+            Authentication authentication) {
+        
+        // TODO: Get user's current progress
+        // TODO: Calculate distance to next stop
+        // TODO: Provide turn-by-turn directions
+        // TODO: Include estimated time and interesting facts
+        String username = authentication.getName();
+        TourNavigationDTO navigation = tourService.getNavigation(tourId, username, currentLat, currentLng);
+        return ResponseEntity.ok(navigation);
+    }
+    
+    @PostMapping("/{tourId}/stops/{stopIndex}/checkin")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<CheckinResponseDTO> checkinAtStop(
+            @PathVariable Long tourId,
+            @PathVariable Integer stopIndex,
+            @RequestParam double lat,
+            @RequestParam double lng,
+            Authentication authentication) {
+        
+        // TODO: Verify user is near the stop location (within 50m)
+        // TODO: Mark stop as visited
+        // TODO: Award points for visiting
+        // TODO: Unlock next stop or complete tour
+        // TODO: Return achievement info and next step
+        String username = authentication.getName();
+        CheckinResponseDTO response = tourService.checkinAtStop(tourId, stopIndex, lat, lng, username);
+        return ResponseEntity.ok(response);
+    }
+}
+
+=====================================
+
+6. GAMIFICATION & USER ENGAGEMENT
+---------------------------------
+TODO: Points, badges, leaderboards, social features
+
+@Entity
+@Table(name = "user_profiles")
+public class UserProfile {
+    @Id
+    private Long userId;
+    
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    @MapsId
+    private User user;
+    
+    @Column(name = "total_points", nullable = false)
+    private Integer totalPoints = 0;
+    
+    @Column(name = "locations_visited")
+    private Integer locationsVisited = 0;
+    
+    @Column(name = "stories_read")
+    private Integer storiesRead = 0;
+    
+    @Column(name = "quizzes_completed")
+    private Integer quizzesCompleted = 0;
+    
+    @Column(name = "tours_completed")
+    private Integer toursCompleted = 0;
+    
+    @ManyToMany
+    @JoinTable(
+        name = "user_badges",
+        joinColumns = @JoinColumn(name = "user_id"),
+        inverseJoinColumns = @JoinColumn(name = "badge_id")
+    )
+    private Set<Badge> badges = new HashSet<>();
+    
+    @Enumerated(EnumType.STRING)
+    private UserLevel level = UserLevel.NOVICE;
+    
+    // Calculate level based on total points
+    public void updateLevel() {
+        if (totalPoints >= 10000) level = UserLevel.LEGEND;
+        else if (totalPoints >= 5000) level = UserLevel.EXPERT;
+        else if (totalPoints >= 2000) level = UserLevel.ADVENTURER;
+        else if (totalPoints >= 500) level = UserLevel.EXPLORER;
+        // else stays NOVICE
+    }
+}
+
+@Entity
+@Table(name = "badges")
+public class Badge {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    
+    @Column(unique = true, nullable = false)
+    private String name;
+    
+    @Column(nullable = false)
+    private String description;
+    
+    private String iconUrl;
+    
+    @Enumerated(EnumType.STRING)
+    private BadgeType type;
+    
+    // Criteria stored as JSON for flexibility
+    @Column(columnDefinition = "jsonb")
+    private String criteria;
+    
+    private Integer pointsRequired;
+}
+
+// Achievement Service
+@Service
+@Transactional
+public class AchievementService {
+    
+    @Autowired
+    private UserProfileRepository profileRepository;
+    
+    @Autowired
+    private BadgeRepository badgeRepository;
+    
+    @EventListener
+    public void handleLocationVisit(LocationVisitedEvent event) {
+        UserProfile profile = getOrCreateProfile(event.getUserId());
+        profile.setLocationsVisited(profile.getLocationsVisited() + 1);
+        profile.setTotalPoints(profile.getTotalPoints() + 50); // Points for visiting
+        
+        // Check for location-based badges
+        checkLocationBadges(profile);
+        
+        profileRepository.save(profile);
+    }
+    
+    @EventListener
+    public void handleQuizCompletion(QuizCompletedEvent event) {
+        UserProfile profile = getOrCreateProfile(event.getUserId());
+        profile.setQuizzesCompleted(profile.getQuizzesCompleted() + 1);
+        profile.setTotalPoints(profile.getTotalPoints() + event.getScore());
+        
+        // Check for quiz-based badges
+        checkQuizBadges(profile, event.getScore());
+        
+        profileRepository.save(profile);
+    }
+    
+    private void checkLocationBadges(UserProfile profile) {
+        // TODO: Award badges based on locations visited
+        // "Local Explorer" - 5 locations
+        // "City Walker" - 20 locations
+        // "Travel Enthusiast" - 50 locations
+        
+        int visited = profile.getLocationsVisited();
+        
+        if (visited == 5) awardBadge(profile, "LOCAL_EXPLORER");
+        if (visited == 20) awardBadge(profile, "CITY_WALKER");
+        if (visited == 50) awardBadge(profile, "TRAVEL_ENTHUSIAST");
+    }
+    
+    private void awardBadge(UserProfile profile, String badgeName) {
+        Badge badge = badgeRepository.findByName(badgeName);
+        if (badge != null && !profile.getBadges().contains(badge)) {
+            profile.getBadges().add(badge);
+            // TODO: Send notification to user
+            // TODO: Award bonus points for badge
+        }
+    }
+}
+
+// Leaderboard Controller
+@RestController
+@RequestMapping("/api/leaderboard")
+public class LeaderboardController {
+    
+    @Autowired
+    private LeaderboardService leaderboardService;
+    
+    @GetMapping("/points")
+    public ResponseEntity<List<LeaderboardEntryDTO>> getPointsLeaderboard(
+            @RequestParam(defaultValue = "10") int limit) {
+        
+        // TODO: Return top users by total points
+        // TODO: Include user's rank if authenticated
+        List<LeaderboardEntryDTO> leaderboard = leaderboardService.getTopByPoints(limit);
+        return ResponseEntity.ok(leaderboard);
+    }
+    
+    @GetMapping("/locations")
+    public ResponseEntity<List<LeaderboardEntryDTO>> getLocationsLeaderboard(
+            @RequestParam(defaultValue = "10") int limit) {
+        
+        // TODO: Return top users by locations visited
+        List<LeaderboardEntryDTO> leaderboard = leaderboardService.getTopByLocations(limit);
+        return ResponseEntity.ok(leaderboard);
+    }
+    
+    @GetMapping("/monthly")
+    public ResponseEntity<List<LeaderboardEntryDTO>> getMonthlyLeaderboard(
+            @RequestParam(defaultValue = "10") int limit) {
+        
+        // TODO: Return top users for current month
+        // TODO: Reset monthly scores at beginning of month
+        List<LeaderboardEntryDTO> leaderboard = leaderboardService.getMonthlyLeaderboard(limit);
+        return ResponseEntity.ok(leaderboard);
+    }
+}
+
+=====================================
+
+DEPLOYMENT & INFRASTRUCTURE SETUP
+=================================
+
+SPRING BOOT APPLICATION.PROPERTIES:
+```properties
+# Database Configuration
+spring.datasource.url=jdbc:postgresql://localhost:5432/taletrace
+spring.datasource.username=${DB_USERNAME:postgres}
+spring.datasource.password=${DB_PASSWORD:password}
+spring.datasource.driver-class-name=org.postgresql.Driver
+
+# JPA/Hibernate
+spring.jpa.hibernate.ddl-auto=validate
+spring.jpa.show-sql=false
+spring.jpa.properties.hibernate.format_sql=true
+spring.jpa.properties.hibernate.dialect=org.hibernate.spatial.dialect.postgis.PostgisPG95Dialect
+
+# Flyway Database Migrations
+spring.flyway.enabled=true
+spring.flyway.locations=classpath:db/migration
+
+# File Upload
+spring.servlet.multipart.max-file-size=10MB
+spring.servlet.multipart.max-request-size=10MB
+
+# JWT Configuration
+jwt.secret=${JWT_SECRET:mySecretKey}
+jwt.expiration=86400000
+
+# AWS S3
+aws.access.key=${AWS_ACCESS_KEY:}
+aws.secret.key=${AWS_SECRET_KEY:}
+aws.s3.bucket=${S3_BUCKET:taletrace-media}
+aws.region=${AWS_REGION:us-east-1}
+
+# Google Maps
+google.maps.api.key=${GOOGLE_MAPS_API_KEY:}
+
+# Redis Cache
+spring.redis.host=${REDIS_HOST:localhost}
+spring.redis.port=${REDIS_PORT:6379}
+spring.redis.password=${REDIS_PASSWORD:}
+
+# Logging
+logging.level.com.taletrace=DEBUG
+logging.level.org.springframework.security=DEBUG
+```
+
+BUILD.GRADLE DEPENDENCIES:
+```gradle
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-cache'
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    
+    // Database
+    implementation 'org.postgresql:postgresql'
+    implementation 'org.flywaydb:flyway-core'
+    
+    // Spatial/GIS
+    implementation 'org.hibernate:hibernate-spatial:6.2.7.Final'
+    implementation 'org.locationtech.jts:jts-core:1.19.0'
+    
+    // JWT
+    implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
+    
+    // AWS S3
+    implementation 'com.amazonaws:aws-java-sdk-s3:1.12.470'
+    
+    // JSON Processing
+    implementation 'com.fasterxml.jackson.core:jackson-core'
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+    
+    // Testing
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.security:spring-security-test'
+    testImplementation 'org.testcontainers:junit-jupiter'
+    testImplementation 'org.testcontainers:postgresql'
+    
+    // Development
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+}
+```
+
+DOCKER SETUP:
+```dockerfile
+FROM openjdk:17-jdk-slim
+
+WORKDIR /app
+
+COPY target/taletrace-backend-0.0.1-SNAPSHOT.jar app.jar
+
+EXPOSE 8080
+
+ENTRYPOINT ["java", "-jar", "app.jar"]
+```
+
+DOCKER-COMPOSE.YML (Development):
+```yaml
+version: '3.8'
+services:
+  postgres:
+    image: postgis/postgis:15-3.3
+    environment:
+      POSTGRES_DB: taletrace
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  app:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/taletrace
+      - SPRING_REDIS_HOST=redis
+    depends_on:
+      - postgres
+      - redis
+
+volumes:
+  postgres_data:
+```
+
+DATABASE MIGRATION EXAMPLE (Flyway):
+```sql
+-- V1__Create_initial_schema.sql
+CREATE EXTENSION IF NOT EXISTS postgis;
+
+CREATE TABLE users (
+    id BIGSERIAL PRIMARY KEY,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    username VARCHAR(100) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    role VARCHAR(50) DEFAULT 'USER',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE locations (
+    id BIGSERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    coordinates geography(POINT, 4326),
+    address VARCHAR(500),
+    category VARCHAR(100),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_locations_coordinates ON locations USING GIST (coordinates);
+```
+
+PRODUCTION DEPLOYMENT OPTIONS:
+1. AWS ECS with Fargate (Recommended)
+2. Kubernetes (AKS, EKS, GKE)
+3. Traditional server with Docker
+4. Cloud platforms (Heroku, Railway, Render)
+
+CI/CD WITH GITHUB ACTIONS:
+```yaml
+name: Deploy to Production
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up JDK 17
+      uses: actions/setup-java@v3
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+    
+    - name: Build with Gradle
+      run: ./gradlew build
+    
+    - name: Run tests
+      run: ./gradlew test
+    
+    - name: Build Docker image
+      run: docker build -t taletrace-backend .
+    
+    - name: Deploy to AWS ECS
+      # Add deployment steps
+```
+
+MONITORING & OBSERVABILITY:
+- Spring Boot Actuator for health checks
+- Micrometer + Prometheus for metrics
+- Structured logging with Logback
+- Sentry for error tracking
+- APM tools (New Relic, DataDog, etc.)
+
+PERFORMANCE CONSIDERATIONS:
+- Database connection pooling (HikariCP - included in Spring Boot)
+- Redis caching for frequently accessed data
+- JVM tuning for production workloads
+- CDN for static assets (images, audio files)
+- Database query optimization and indexing
+- API rate limiting with Spring Security
+
+SECURITY BEST PRACTICES:
+- HTTPS everywhere (TLS 1.2+)
+- Input validation and sanitization
+- SQL injection prevention (JPA prevents this)
+- CORS configuration
+- Security headers (Spring Security provides these)
+- Regular dependency updates (vulnerability scanning)
+- Environment-specific configurations
+
+ESTIMATED MONTHLY COSTS:
+- VPS/Server: $20-100 (depending on size)
+- Database: $15-50 (managed PostgreSQL)
+- File Storage: $5-20 (S3/equivalent)
+- Maps API: $10-100 (usage-dependent)
+- Monitoring: $0-50
+- Total: $50-320/month
+
+=====================================
+
+KEY JAVA/SPRING BOOT ADVANTAGES:
++ Enterprise-grade ecosystem and tooling
++ Excellent performance and scalability
++ Strong typing prevents many runtime errors
++ Rich geospatial support with Hibernate Spatial
++ Robust security framework (Spring Security)
++ Excellent IDE support and debugging
++ Large community and extensive documentation
++ Battle-tested in production environments
+
+POTENTIAL CHALLENGES:
+- Longer development time (more boilerplate)
+- Higher learning curve for beginners
+- Larger memory footprint
+- More complex deployment setup
+- Verbose configuration (though Spring Boot helps)
+
+RECOMMENDED LEARNING PATH:
+1. Spring Boot fundamentals (REST APIs, Data JPA)
+2. Spring Security implementation
+3. Database integration with PostgreSQL/PostGIS
+4. File upload and AWS S3 integration
+5. Testing with JUnit and Testcontainers
+6. Production deployment with Docker
+7. Performance tuning and monitoring
+
+TIME ESTIMATE: 10-16 weeks for MVP (depending on Java experience)
